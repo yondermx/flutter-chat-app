@@ -1,8 +1,11 @@
+import 'package:chat/helpers/mostrar_alerta.dart';
+import 'package:chat/services/auth_service.dart';
 import 'package:chat/widgets/btn_azul.dart';
 import 'package:chat/widgets/custom_input.dart';
 import 'package:chat/widgets/labels.dart';
 import 'package:chat/widgets/logo.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
   @override
@@ -21,7 +24,11 @@ class LoginPage extends StatelessWidget {
                     titulo: 'Messenger',
                   ),
                   _Form(),
-                  Labels(ruta: 'register', titulo: '¿No tienes una cuenta?', subtitulo:'Crea una ahora!' ,),
+                  Labels(
+                    ruta: 'register',
+                    titulo: '¿No tienes una cuenta?',
+                    subtitulo: 'Crea una ahora!',
+                  ),
                   Text(
                     'Terminos y condiciones de uso',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w200),
@@ -45,6 +52,8 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: EdgeInsets.only(top: 40),
       padding: EdgeInsets.symmetric(horizontal: 50),
@@ -66,12 +75,24 @@ class __FormState extends State<_Form> {
           //  RaisedButton(onPressed: onPressed)
 
           BotonAzul(
-            onPres: () {
-              print(emailCtrl.text);
-              print(passCtrl.text);
+            onPres: authService.autenticando
+                ? null
+                : () async {
+                    // Oculta el teclado
+                    FocusScope.of(context).unfocus();
 
-            },
-            text: 'Ingresar',
+                    final loginOk = await authService.login(
+                        emailCtrl.text.trim(), passCtrl.text.trim());
+
+                    if (loginOk) {
+                         // TODO: Conectar a nuestro socket server
+                        Navigator.pushReplacementNamed(context, 'usuarios');
+                    } else {
+                      mostrarAlerta(context, 'Login incorrecto',
+                          'Revise sus credenciales nuevamente');
+                    }
+                  },
+            text: 'Ingresar usuario',
           )
         ],
       ),
